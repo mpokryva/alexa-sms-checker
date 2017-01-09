@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AlexaSMSChecker</string>
+    <string name="type_in_pin">Type in your PIN</string>
+    <string name="confirm_button_text">Confirm</string>
+</resources>

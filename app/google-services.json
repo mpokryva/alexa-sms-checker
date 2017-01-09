@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "681882310579",
+    "firebase_url": "https://alexasmschecker.firebaseio.com",
+    "project_id": "alexasmschecker",
+    "storage_bucket": "alexasmschecker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:681882310579:android:7b937181dff5b50d",
+        "android_client_info": {
+          "package_name": "com.example.miki.alexasmschecker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "681882310579-ltve400c1g4h36jfi8forie1h0jlkffr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.miki.alexasmschecker",
+            "certificate_hash": "1C6F8460E8B40AA2698E6633D967A0DF26D5CBD2"
+          }
+        },
+        {
+          "client_id": "681882310579-ou4t04npsb8176obakj42gl3o3mih3vh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCautXhLhg8d8-3v_wjlAdEy2cDyRPRvbI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "681882310579-ou4t04npsb8176obakj42gl3o3mih3vh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
