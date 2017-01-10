@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "681882310579-cl4vqb9299ttkjt2uos1kc9nfvbht0j8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.miki.alexasmschecker",
+            "certificate_hash": "29827C1D1FDD0B90A676E0C1B5BFE200B5633CDD"
+          }
+        },
+        {
           "client_id": "681882310579-ltve400c1g4h36jfi8forie1h0jlkffr.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
