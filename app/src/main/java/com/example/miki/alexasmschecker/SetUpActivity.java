@@ -1,5 +1,6 @@
 package com.example.miki.alexasmschecker;
 
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
@@ -58,13 +59,16 @@ public class SetUpActivity extends AppCompatActivity {
                     }
                     final DatabaseReference processedPinRef = newPinsRef.child(processedPin);
                     final String processedNumToSend = processedNumber;
-                    final String pinFinal = processedPin;
                     processedPinRef.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.exists()) {
+                                // Get the userId
+                                String userId = (String)dataSnapshot.child("userId").getValue();
+                                // Add the user.
+                                rootRef.child("users").child(userId).child("phoneNumber").setValue(processedNumToSend);
+                                // Remove the pin from list of new pins.
                                 processedPinRef.removeValue();
-                                rootRef.child("users").child(pinFinal).child("phoneNumber").setValue(processedNumToSend);
                                 Toast.makeText(SetUpActivity.this, "Pin matched. You're ready to go!", Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(SetUpActivity.this, "Pin does not exist.", Toast.LENGTH_SHORT).show();
