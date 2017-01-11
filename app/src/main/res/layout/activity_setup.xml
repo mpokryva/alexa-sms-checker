@@ -16,7 +16,16 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:hint="@string/type_in_pin"
-        android:inputType="number"
+        android:textSize="16sp"/>
+    
+    <EditText
+        android:id="@+id/edittext_phone_num"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/edittext_pin"
+        android:hint="@string/type_in_your_phone_number"
+        android:inputType="phone"
         android:textSize="16sp"/>
 
     <Button
@@ -24,6 +33,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/confirm_button_text"
-        android:layout_below="@+id/edittext_pin"
+        android:layout_below="@+id/edittext_phone_num"
         android:layout_centerHorizontal="true"/>
 </RelativeLayout>
