@@ -3,4 +3,6 @@
     <string name="type_in_pin">Type in your PIN</string>
     <string name="confirm_button_text">Confirm</string>
     <string name="type_in_your_phone_number">Type in your phone number</string>
+    <string name="alexa_user_id">"AlexaUserId"</string>
+    <string name="preference_file_key">"/data/user/0/com.example.miki.alexasmschecker/shared_prefs/com.example.miki.alexasmschecker_preferences.xml"</string>
 </resources>

@@ -1,12 +1,16 @@
 package com.example.miki.alexasmschecker;
 
-import android.provider.Settings;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.*;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
-import android.text.TextUtils;
-import android.text.method.CharacterPickerDialog;
-import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,12 +27,22 @@ public class SetUpActivity extends AppCompatActivity {
     private EditText pinEditText;
     private EditText phoneNumEditText;
     private Button confirmButton;
+    private SMSService mSMSService;
+    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
+    private DatabaseReference mRootRef = mDatabase.getReference();
+    private DatabaseReference newPinsRef = mRootRef.child("newPins");
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            mSMSService = ((SMSService.SMSBinder) iBinder).getService();
+        }
 
-    // Write a message to the database
-    private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private DatabaseReference rootRef = database.getReference();
-    private DatabaseReference newPinsRef = rootRef.child("newPins");
-    private DatabaseReference verificationQueueRef = rootRef.child("verificationQueue");
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mSMSService = null;
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +51,7 @@ public class SetUpActivity extends AppCompatActivity {
         pinEditText = (EditText) findViewById(R.id.edittext_pin);
         confirmButton = (Button) findViewById(R.id.confirm_button);
         phoneNumEditText = (EditText) findViewById(R.id.edittext_phone_num);
+        NameFinder test = new NameFinder("Debbi");
 
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,12 +79,21 @@ public class SetUpActivity extends AppCompatActivity {
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.exists()) {
                                 // Get the userId
-                                String userId = (String)dataSnapshot.child("userId").getValue();
+                                String userId = (String) dataSnapshot.child("userId").getValue();
                                 // Add the user.
-                                rootRef.child("users").child(userId).child("phoneNumber").setValue(processedNumToSend);
+                                mRootRef.child("users").child(userId).child("phoneNumber").setValue(processedNumToSend);
                                 // Remove the pin from list of new pins.
-                                processedPinRef.removeValue();
                                 Toast.makeText(SetUpActivity.this, "Pin matched. You're ready to go!", Toast.LENGTH_SHORT).show();
+
+                                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                SharedPreferences.Editor editor = sharedPref.edit();
+                                editor.putString(getString(R.string.alexa_user_id), userId);
+                                editor.apply();
+
+                                startSMSService();
+                                bindToService();
+
+                                processedPinRef.removeValue();
                             } else {
                                 Toast.makeText(SetUpActivity.this, "Pin does not exist.", Toast.LENGTH_SHORT).show();
                             }
@@ -89,11 +113,23 @@ public class SetUpActivity extends AppCompatActivity {
         });
     }
 
-    private void addToVerificationQueue(String phoneNumber){
+    private void addToVerificationQueue(String phoneNumber) {
 
     }
 
+    public void startSMSService() {
+        Intent i = new Intent(this, SMSService.class);
+        startService(i);
+    }
 
+    public void stopMethod(View v) {
+
+    }
+
+    public void bindToService() {
+        Intent intent = new Intent(this, SMSService.class);
+        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
+    }
 
 
 }
