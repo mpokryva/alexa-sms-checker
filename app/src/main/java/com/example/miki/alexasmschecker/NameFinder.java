@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Created by mpokr on 1/16/2017.
+ * Class that finds spelling variations of first names.
  */
 
 public class NameFinder {
@@ -37,10 +37,5 @@ public class NameFinder {
         catch (IOException e) {
             return null;
         }
-    }
-
-    public static void main(String[] args)  {
-        NameFinder nameFinder = new NameFinder("Debbi");
-        nameFinder.findVariations();
     }
 }

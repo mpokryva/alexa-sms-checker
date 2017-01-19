@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 /**
- * Created by mpokr on 1/18/2017.
+ * Makes SMSService start at bootup (if initial setup has been completed).
  */
 
 public class BootCompleteReciever extends BroadcastReceiver {

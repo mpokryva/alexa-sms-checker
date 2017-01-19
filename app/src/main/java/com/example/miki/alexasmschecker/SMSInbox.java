@@ -5,7 +5,8 @@ import android.database.Cursor;
 import android.net.Uri;
 
 /**
- * Created by mpokr on 1/12/2017.
+ * Class that can get data from the Android SMS inbox about number of unread messages,
+ * messages received, etc. (Currently very incomplete).
  */
 
 public class SMSInbox {

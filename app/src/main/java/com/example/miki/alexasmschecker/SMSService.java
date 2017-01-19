@@ -26,7 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 /**
- * Created by mpokr on 1/11/2017.
+ * Service that communicates with Alexa, and carries out intent requests.
  */
 
 public class SMSService extends Service {

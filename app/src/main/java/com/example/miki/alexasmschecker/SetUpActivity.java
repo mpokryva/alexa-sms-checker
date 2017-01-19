@@ -22,6 +22,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+/**
+ * The initial set up activity. User is supposed to match pin spoken out loud by Alexa in this activity.
+ */
 public class SetUpActivity extends AppCompatActivity {
 
     private EditText pinEditText;
@@ -51,7 +54,6 @@ public class SetUpActivity extends AppCompatActivity {
         pinEditText = (EditText) findViewById(R.id.edittext_pin);
         confirmButton = (Button) findViewById(R.id.confirm_button);
         phoneNumEditText = (EditText) findViewById(R.id.edittext_phone_num);
-        NameFinder test = new NameFinder("Debbi");
 
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,17 +115,16 @@ public class SetUpActivity extends AppCompatActivity {
         });
     }
 
-    private void addToVerificationQueue(String phoneNumber) {
 
-    }
 
     public void startSMSService() {
         Intent i = new Intent(this, SMSService.class);
         startService(i);
     }
 
-    public void stopMethod(View v) {
-
+    public void stopMethod() {
+        Intent i = new Intent(this, SMSService.class);
+        stopService(i);
     }
 
     public void bindToService() {
