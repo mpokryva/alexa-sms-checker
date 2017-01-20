@@ -132,5 +132,11 @@ public class SetUpActivity extends AppCompatActivity {
         bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        unbindService(mServiceConnection);
+    }
+
 
 }

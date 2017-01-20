@@ -3,9 +3,11 @@ package com.example.miki.alexasmschecker;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Binder;
@@ -14,7 +16,9 @@ import android.os.IBinder;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
 import android.support.v4.app.NotificationCompat;
+import android.util.ArraySet;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -24,6 +28,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Service that communicates with Alexa, and carries out intent requests.
@@ -68,13 +74,15 @@ public class SMSService extends Service {
 
                         switch ((String) dataSnapshot.child("intentName").getValue()) {
                             case ("GetUnreadMessageCount"):
-                                int unreadCount = mInbox.getUnreadCount();
+                                int unreadCount = getUnreadMessageCount();
+                                ArrayList<String> messages = getAllSMS();
                                 System.out.println(dataSnapshot.getKey());
+                                System.out.println("SMS: "+ Arrays.toString(messages.toArray()));
                                 intentQueue.child(dataSnapshot.getKey()).child("result").setValue(unreadCount);
                                 intentQueue.child(dataSnapshot.getKey()).child("done").setValue(true);
                                 break;
                             case ("MakeCall"):
-                                intentQueue.child(dataSnapshot.getKey()).child("contactName").addListenerForSingleValueEvent(new ValueEventListener() {
+                                intentQueue.child(dataSnapshot.getKey()).child("recipient").addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
                                         // Getting contact name.
@@ -178,4 +186,34 @@ public class SMSService extends Service {
     }
 
 
+    private int getUnreadMessageCount() {
+        Cursor c = getContentResolver().query(Telephony.Sms.Inbox.CONTENT_URI, null, "read = 0", null, null);
+        int unreadCount = c.getCount();
+        c.close();
+        return unreadCount;
+    }
+
+    private ArrayList<String> getAllSMS(){
+        ContentResolver contentResolver = getContentResolver();
+        Cursor c = contentResolver.query(Telephony.Sms.Inbox.CONTENT_URI, null, null, null, null);
+        int totalSMS = 0;
+        ArrayList<String> smsList = new ArrayList<>();
+        if (c != null) {
+            totalSMS = c.getCount();
+            if (c.moveToFirst()){
+                for (int i = 0; i < totalSMS; i ++) {
+                    String body = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY));
+                    smsList.add(i, body);
+                }
+            }
+        }
+        c.close();
+        return smsList;
+    }
+
+    public static void main(String[] args) {
+        SMSService smsService = new SMSService();
+        smsService.getAllSMS();
+    }
 }
+
