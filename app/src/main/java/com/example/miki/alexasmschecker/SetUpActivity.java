@@ -34,6 +34,7 @@ public class SetUpActivity extends AppCompatActivity {
     private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mRootRef = mDatabase.getReference();
     private DatabaseReference newPinsRef = mRootRef.child("newPins");
+    private SharedPreferences mSharedPref;
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -50,6 +51,13 @@ public class SetUpActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mSharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String alexaUserId = mSharedPref.getString(getString(R.string.alexa_user_id), null);
+        if (alexaUserId != null) {
+            System.out.println("Starting service before launching");
+            startSMSService();
+            bindToService();
+        }
         setContentView(R.layout.activity_setup);
         pinEditText = (EditText) findViewById(R.id.edittext_pin);
         confirmButton = (Button) findViewById(R.id.confirm_button);

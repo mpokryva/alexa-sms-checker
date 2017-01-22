@@ -18,6 +18,8 @@ import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.provider.Telephony;
 import android.support.v4.app.NotificationCompat;
+import android.telephony.PhoneNumberUtils;
+import android.telephony.SmsManager;
 import android.util.ArraySet;
 
 import com.google.firebase.database.ChildEventListener;
@@ -72,49 +74,57 @@ public class SMSService extends Service {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-                        switch ((String) dataSnapshot.child("intentName").getValue()) {
-                            case ("GetUnreadMessageCount"):
-                                int unreadCount = getUnreadMessageCount();
-                                ArrayList<String> messages = getAllSMS();
-                                System.out.println(dataSnapshot.getKey());
-                                System.out.println("SMS: "+ Arrays.toString(messages.toArray()));
-                                intentQueue.child(dataSnapshot.getKey()).child("result").setValue(unreadCount);
-                                intentQueue.child(dataSnapshot.getKey()).child("done").setValue(true);
-                                break;
-                            case ("MakeCall"):
-                                intentQueue.child(dataSnapshot.getKey()).child("recipient").addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        // Getting contact name.
-                                        String contactName = (String) dataSnapshot.getValue();
-                                        Intent callIntent = new Intent(Intent.ACTION_CALL);
-                                        String phoneNumber = getPhoneNumber(contactName, SMSService.this);
-                                        if (phoneNumber == null) {
-                                            // If Alexa spelled name wrong, find name variations, and try to match.
-                                            NameFinder nameFinder = new NameFinder(contactName);
-                                            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-                                            StrictMode.setThreadPolicy(policy);
-                                            ArrayList<String> nameVars = nameFinder.findVariations();
-                                            int i = 0;
-                                            while (i < nameVars.size() && phoneNumber == null) {
-                                                phoneNumber = getPhoneNumber(nameVars.get(i), SMSService.this);
-                                                i++;
-                                            }
-                                        }
-                                        callIntent.setData(Uri.parse("tel:" + phoneNumber));
-                                        callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        callIntent.addFlags(Intent.FLAG_FROM_BACKGROUND);
-                                        startActivity(callIntent);
+                    switch ((String) dataSnapshot.child("intentName").getValue()) {
+                        case ("GetUnreadMessageCount"):
+                            int unreadCount = getUnreadMessageCount();
+                            System.out.println(dataSnapshot.getKey());
+                            intentQueue.child(dataSnapshot.getKey()).child("result").setValue(unreadCount);
+                            intentQueue.child(dataSnapshot.getKey()).child("done").setValue(true);
+                            break;
+                        case ("MakeCall"):
+                            // Get value of recipient from Firebase.
+                            String recipient = (String) dataSnapshot.child("recipient").getValue();
+                            // Check if recipient is a phone number or a name
+                            String phoneNumber;
+                            boolean numberFound;
+                            if (!PhoneNumberUtils.isGlobalPhoneNumber(recipient)) {
+                                String contactName = recipient;
+                                phoneNumber = getPhoneNumber(contactName);
+                                if (phoneNumber == null) {
+                                    // If Alexa spelled name wrong, find name variations, and try to match.
+                                    NameFinder nameFinder = new NameFinder(contactName);
+                                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                                    StrictMode.setThreadPolicy(policy);
+                                    ArrayList<String> nameVars = nameFinder.findVariations();
+                                    int i = 0;
+                                    while (i < nameVars.size() && phoneNumber == null) {
+                                        phoneNumber = getPhoneNumber(nameVars.get(i));
+                                        i++;
                                     }
-
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) {
-
-                                    }
-                                });
-                                intentQueue.child(dataSnapshot.getKey()).removeValue();
-                                break;
-                        }
+                                }
+                                numberFound = (phoneNumber != null);
+                            } else {
+                                phoneNumber = recipient;
+                                numberFound = true;
+                            }
+                            intentQueue.child(dataSnapshot.getKey()).child("numberFound").setValue(numberFound);
+                            if (numberFound) {
+                                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                                callIntent.setData(Uri.parse("tel:" + phoneNumber));
+                                callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                callIntent.addFlags(Intent.FLAG_FROM_BACKGROUND);
+                                startActivity(callIntent);
+                            }
+                            break;
+                        case "SendSMS":
+                            String messageBody = (String) dataSnapshot.child("messageBody").getValue();
+                            String contactName = (String) dataSnapshot.child("recipient").getValue();
+                            String phoneNum = getPhoneNumber(contactName);
+                            SmsManager smsManager = SmsManager.getDefault();
+                            smsManager.sendTextMessage(phoneNum, null, messageBody, null, null);
+                            break;
+                    }
+                    //intentQueue.child(dataSnapshot.getKey()).removeValue();
                 }
 
                 @Override
@@ -157,11 +167,31 @@ public class SMSService extends Service {
         }
     }
 
-    private String getPhoneNumber(String name, Context context) {
+
+
+    private String getPhoneNumber(String contactName) {
+        String phoneNumber = getPhoneNumberHelper(contactName);
+        if (phoneNumber == null) {
+            // If Alexa spelled name wrong, find name variations, and try to match.
+            NameFinder nameFinder = new NameFinder(contactName);
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+            ArrayList<String> nameVars = nameFinder.findVariations();
+            int i = 0;
+            while (i < nameVars.size() && phoneNumber == null) {
+                phoneNumber = getPhoneNumberHelper(nameVars.get(i));
+                i++;
+            }
+        }
+        return phoneNumber;
+
+    }
+
+    private String getPhoneNumberHelper(String name) {
         String result = null;
         String selection = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " like'%" + name + "%'";
-        String[] projection = new String[] { ContactsContract.CommonDataKinds.Phone.NUMBER};
-        Cursor c = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projection, selection, null, null);
+        String[] projection = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER};
+        Cursor c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projection, selection, null, null);
         if (c.moveToFirst()) {
             int i = 0;
             while (!c.isAfterLast()) {
@@ -179,7 +209,6 @@ public class SMSService extends Service {
     }
 
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -193,27 +222,5 @@ public class SMSService extends Service {
         return unreadCount;
     }
 
-    private ArrayList<String> getAllSMS(){
-        ContentResolver contentResolver = getContentResolver();
-        Cursor c = contentResolver.query(Telephony.Sms.Inbox.CONTENT_URI, null, null, null, null);
-        int totalSMS = 0;
-        ArrayList<String> smsList = new ArrayList<>();
-        if (c != null) {
-            totalSMS = c.getCount();
-            if (c.moveToFirst()){
-                for (int i = 0; i < totalSMS; i ++) {
-                    String body = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY));
-                    smsList.add(i, body);
-                }
-            }
-        }
-        c.close();
-        return smsList;
-    }
-
-    public static void main(String[] args) {
-        SMSService smsService = new SMSService();
-        smsService.getAllSMS();
-    }
 }
 
