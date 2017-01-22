@@ -1,0 +1,16 @@
+{
+  "name": "sms-checker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "alexa-sms-checker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^3.6.5",
+    "request": "^2.79.0"
+  }
+}
