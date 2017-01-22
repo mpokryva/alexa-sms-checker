@@ -116,7 +116,7 @@ public class SMSService extends Service {
                                 startActivity(callIntent);
                             }
                             break;
-                        case "SendSMS":
+                        case ("SendSMS"):
                             String messageBody = (String) dataSnapshot.child("messageBody").getValue();
                             String contactName = (String) dataSnapshot.child("recipient").getValue();
                             String phoneNum = getPhoneNumber(contactName);
